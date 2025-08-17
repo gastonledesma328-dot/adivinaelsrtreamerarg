@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Wordle Streamers Argentinos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #8B5CF6;
+            --secondary-color: #EC4899;
+            --correct-color: #10B981;
+            --present-color: #F59E0B;
+            --absent-color: #64748B;
+            --text-color: #0f172a; /* más contrastado con el fondo claro */
+            --bg-color: #1E293B;
+            --card-bg: rgba(30, 41, 59, 0.12);
+            --key-bg: rgba(71, 85, 105, 0.5);
+            --key-hover: rgba(71, 85, 105, 0.8);
+            --letter-box-bg: rgba(255, 255, 255, 0.35);
+            --letter-box-border: rgba(15, 23, 42, 0.25);
+            --spacing-unit: 8px;
+            --border-radius: 12px;
+            --section-gap: calc(var(--spacing-unit) * 3);
+            /* tamaño de celda calculado por JS */
+            --cell-size: 48px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(
+                135deg,
+                #5086c1,
+                #6a9eda,
+                #84b6f4,
+                #b2dafa,
+                #dcffff
+            );
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-color);
+            padding: var(--section-gap);
+            background-attachment: fixed;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--section-gap);
+        }
+
+        .header { width: 100%; text-align: center; margin-bottom: var(--spacing-unit); }
+
+        .title {
+            font-size: 2rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.08);
+            background: linear-gradient(to right, #0f172a, #1e293b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: var(--spacing-unit);
+        }
+
+        .subtitle { font-size: 1rem; opacity: 0.9; }
+
+        .game-info {
+            display: flex; justify-content: space-between; align-items: center;
+            width: 100%; margin-bottom: var(--spacing-unit);
+        }
+
+        .game-mode {
+            background: var(--card-bg);
+            padding: var(--spacing-unit) calc(var(--spacing-unit) * 2);
+            border-radius: var(--border-radius);
+            font-size: 0.9rem;
+            backdrop-filter: blur(10px);
+            display: flex; align-items: center; gap: var(--spacing-unit);
+        }
+
+        .timer { font-size: 0.9rem; opacity: 0.9; display: flex; align-items: center; gap: var(--spacing-unit); }
+
+        .difficulty-selector {
+            display: flex; gap: calc(var(--spacing-unit) * 2);
+            margin-bottom: var(--section-gap);
+            justify-content: center; width: 100%;
+        }
+
+        .difficulty-btn {
+            padding: var(--spacing-unit) calc(var(--spacing-unit) * 2);
+            border-radius: var(--border-radius);
+            background: var(--card-bg);
+            border: none; color: var(--text-color); cursor: pointer;
+            transition: all 0.3s ease; font-size: 0.9rem;
+        }
+        .difficulty-btn.active { background: var(--primary-color); color: #fff; font-weight: bold; }
+
+        .hint {
+            background: var(--card-bg);
+            padding: calc(var(--spacing-unit) * 2);
+            border-radius: var(--border-radius);
+            width: 100%; backdrop-filter: blur(10px);
+        }
+
+        .hint-title {
+            font-weight: bold; margin-bottom: var(--spacing-unit);
+            color: #1e293b; display: flex; align-items: center; gap: var(--spacing-unit);
+        }
+
+        .hint-text { font-size: 0.95rem; opacity: 0.95; line-height: 1.5; text-align: center; }
+
+        /* TABLERO: altura se fija por JS */
+        .game-board {
+            display: grid;
+            grid-template-rows: repeat(6, auto);
+            gap: var(--spacing-unit);
+            width: 100%;
+            margin: var(--spacing-unit) 0;
+        }
+
+        .guess-row {
+            display: grid;
+            gap: var(--spacing-unit);
+            grid-template-columns: repeat(var(--word-length, 8), var(--cell-size)); /* respaldo */
+            justify-content: center;
+        }
+
+        /* CASILLA de letra */
+        .letter-box {
+            width: var(--cell-size);
+            height: var(--cell-size);
+            border: 2px solid var(--letter-box-border);
+            border-radius: var(--border-radius);
+            display: flex; align-items: center; justify-content: center;
+            font-size: calc(var(--cell-size) * 0.5);
+            font-weight: bold; text-transform: uppercase;
+            background: var(--letter-box-bg); backdrop-filter: blur(10px);
+            transition: all 0.3s ease; color: #0f172a;
+        }
+
+        /* CELDA de ESPACIO (invisible) */
+        .space-cell {
+            width: var(--cell-size);
+            height: var(--cell-size);
+            /* sin borde ni fondo; solo ocupa lugar */
+            background: transparent;
+            border: none;
+            pointer-events: none;
+        }
+
+        .letter-box.correct { background: var(--correct-color); border-color: var(--correct-color); color: #fff; animation: flip 0.6s ease; }
+        .letter-box.present { background: var(--present-color); border-color: var(--present-color); color: #fff; animation: flip 0.6s ease; }
+        .letter-box.absent  { background: var(--absent-color);  border-color: var(--absent-color);  color: #fff; animation: flip 0.6s ease; }
+        .letter-box.filled  { border-color: rgba(15,23,42,0.5); animation: pulse 0.2s ease; }
+
+        .message {
+            width: 100%;
+            padding: calc(var(--spacing-unit) * 2);
+            border-radius: var(--border-radius);
+            background: var(--card-bg); backdrop-filter: blur(10px);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: var(--spacing-unit); text-align: center; min-height: 100px;
+        }
+        .message.success { background: var(--correct-color); color: #fff; }
+        .message.error   { background: #EF4444; color: #fff; }
+
+        .winner-image {
+            width: 60px; height: 60px; border-radius: 50%;
+            object-fit: cover; border: 2px solid white; display: none;
+        }
+
+        .keyboard { display: grid; gap: var(--spacing-unit); margin-bottom: var(--section-gap); width: 100%; }
+        .keyboard-row { display: flex; gap: var(--spacing-unit); justify-content: center; width: 100%; }
+
+        .key {
+            padding: calc(var(--spacing-unit) * 2) var(--spacing-unit);
+            background: var(--key-bg); border: none;
+            border-radius: calc(var(--border-radius) / 2);
+            color: #0f172a; font-weight: bold; cursor: pointer;
+            min-width: 30px; height: 50px; display: flex; align-items: center; justify-content: center;
+            font-size: 1rem;
+        }
+        .key.enter, .key.backspace { min-width: 60px; font-size: 0.8rem; }
+        .key.enter    { background: var(--primary-color); color: #fff; }
+        .key.backspace{ background: #EF4444; color: #fff; }
+
+        .stats-container {
+            display: grid; grid-template-columns: repeat(2, 1fr);
+            gap: calc(var(--spacing-unit) * 2); margin-bottom: var(--section-gap); width: 100%;
+        }
+
+        .stat { background: var(--card-bg); padding: calc(var(--spacing-unit) * 2); border-radius: var(--border-radius); backdrop-filter: blur(10px); text-align: center; }
+        .stat-number { font-size: 1.5rem; font-weight: bold; display: block; }
+        .stat-label { font-size: 0.8rem; opacity: 0.9; }
+
+        .actions {
+            display: flex; gap: calc(var(--spacing-unit) * 2);
+            margin-bottom: var(--section-gap); justify-content: center; width: 100%; flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: calc(var(--spacing-unit) * 2) calc(var(--spacing-unit) * 3);
+            border: none; border-radius: var(--border-radius);
+            color: white; font-size: 1rem; font-weight: bold; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: var(--spacing-unit);
+            min-width: 150px;
+        }
+        .btn-primary { background: var(--primary-color); }
+        .btn-secondary { background: var(--card-bg); color: #0f172a; }
+
+        @keyframes flip { 0%{transform:rotateX(0)} 50%{transform:rotateX(90deg)} 100%{transform:rotateX(0)} }
+        @keyframes pulse{ 0%{transform:scale(1)} 50%{transform:scale(1.05)} 100%{transform:scale(1)} }
+
+        @media (max-width: 480px) {
+            .letter-box { font-size: calc(var(--cell-size) * 0.48); }
+            .key { height: 45px; min-width: 25px; font-size: 0.9rem; }
+            .key.enter, .key.backspace { min-width: 50px; font-size: 0.7rem; }
+            .actions { flex-direction: column; align-items: center; }
+            .btn { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">ADIVINA EL STREAMER ARG</h1>
+            <p class="subtitle">Adivina el streamer argentino en 6 intentos</p>
+        </div>
+
+        <div class="game-info">
+            <div class="game-mode">
+                <i class="fas fa-gamepad"></i>
+                <span id="gameMode">Normal</span>
+            </div>
+            <div class="timer">
+                <i class="fas fa-clock"></i>
+                <span id="gameTimer">00:00</span>
+            </div>
+        </div>
+
+        <div class="difficulty-selector">
+            <button class="difficulty-btn active" data-difficulty="normal">Normal</button>
+            <button class="difficulty-btn" data-difficulty="hard">Difícil</button>
+            <button class="difficulty-btn" data-difficulty="extreme">Extremo</button>
+        </div>
+
+        <div class="hint" id="hint">
+            <div class="hint-title">
+                <i class="fas fa-lightbulb"></i>
+                <span>Pista:</span>
+                <button class="btn-secondary" style="padding: 2px 8px; margin-left: auto;" id="hintToggle">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+            <div class="hint-text" id="hintText">El rey de Kick Argentina, fundador de la Coscu Army</div>
+        </div>
+
+        <div class="game-board" id="gameBoard"></div>
+
+        <div class="message" id="message">
+            <i class="fas fa-keyboard"></i>
+            <span>¡Adivina el streamer argentino!</span>
+            <img src="" alt="Streamer" class="winner-image" id="winnerImage">
+        </div>
+
+        <div class="keyboard" id="keyboard">
+            <div class="keyboard-row">
+                <button class="key" data-key="q">Q</button>
+                <button class="key" data-key="w">W</button>
+                <button class="key" data-key="e">E</button>
+                <button class="key" data-key="r">R</button>
+                <button class="key" data-key="t">T</button>
+                <button class="key" data-key="y">Y</button>
+                <button class="key" data-key="u">U</button>
+                <button class="key" data-key="i">I</button>
+                <button class="key" data-key="o">O</button>
+                <button class="key" data-key="p">P</button>
+            </div>
+            <div class="keyboard-row">
+                <button class="key" data-key="a">A</button>
+                <button class="key" data-key="s">S</button>
+                <button class="key" data-key="d">D</button>
+                <button class="key" data-key="f">F</button>
+                <button class="key" data-key="g">G</button>
+                <button class="key" data-key="h">H</button>
+                <button class="key" data-key="j">J</button>
+                <button class="key" data-key="k">K</button>
+                <button class="key" data-key="l">L</button>
+            </div>
+            <div class="keyboard-row">
+                <button class="key enter" data-key="enter"><i class="fas fa-arrow-right"></i></button>
+                <button class="key" data-key="z">Z</button>
+                <button class="key" data-key="x">X</button>
+                <button class="key" data-key="c">C</button>
+                <button class="key" data-key="v">V</button>
+                <button class="key" data-key="b">B</button>
+                <button class="key" data-key="n">N</button>
+                <button class="key" data-key="m">M</button>
+                <button class="key backspace" data-key="backspace"><i class="fas fa-backspace"></i></button>
+            </div>
+        </div>
+
+        <div class="stats-container">
+            <div class="stat">
+                <span class="stat-number" id="gamesPlayed">0</span>
+                <span class="stat-label">Jugados</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number" id="winPercentage">0%</span>
+                <span class="stat-label">Victorias</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number" id="currentStreak">0</span>
+                <span class="stat-label">Racha Actual</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number" id="maxStreak">0</span>
+                <span class="stat-label">Mejor Racha</span>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="btn btn-primary" onclick="newGame()">
+                <i class="fas fa-redo"></i>
+                NUEVO JUEGO
+            </button>
+            <button class="btn btn-secondary" id="howToPlayBtn">
+                <i class="fas fa-question-circle"></i>
+                CÓMO JUGAR
+            </button>
+            <button class="btn btn-secondary" id="streamersBtn">
+                <i class="fas fa-users"></i>
+                STREAMERS
+            </button>
+        </div>
+    </div>
+
+    <script>
+    // =======================
+    // Base de datos de streamers (con espacios reales)
+    // =======================
+    const STREAMERS_DB = [
+        { name: "AGUSBOB", hint: "🇦🇷 Streamer argentino de Slots", image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ8Z5_kV4T12lw1j4kYUra8rNlA5Yiu_3W1jA&s" },
+        { name: "ALONSO", hint: "🇦🇷 Streamer argentino, hermano de Tomás Mazza", image: "" },
+        { name: "AYLENDMC", hint: "🇦🇷 Streamer argentina de Minecraft y gaming", image: "" },
+        { name: "BANANIROU", hint: "🇦🇷 Streamer argentino de gaming y variedad", image: "" },
+        { name: "BRUNENGER", hint: "🇦🇷 Streamer argentino conocido por su humor y el IRL", image: "" },
+        { name: "CARRERAAA", hint: "🇦🇷 Streamer argentino famoso por sus reacciones épicas", image: "" },
+        { name: "COKER", hint: "🇦🇷 Streamer argentino", image: "" },
+        { name: "COSCU", hint: "🇦🇷 El rey de Kick Argentina, fundador de la Coscu Army", image: "" },
+        { name: "FRANKKASTER", hint: "🇦🇷 Streamer argentino veterano", image: "" },
+        { name: "IAARAS", hint: "🇦🇷 Streamer argentina de gaming y variedad", image: "" },
+        { name: "JOACO TURRO", hint: "🇦🇷 Streamer argentino con personalidad única", image: "" },
+        { name: "KING", hint: "🇦🇷 Streamer argentino de gaming y entretenimiento", image: "" },
+        { name: "LA AGUSNETA", hint: "🇦🇷 Streamer argentina de fútbol y es parecido a Mr. Bean", image: "" },
+        { name: "LA COBRAA", hint: "🇦🇷 Streamer argentino de fútbol (con muchas chicas)", image: "" },
+        { name: "LILCAKE", hint: "🇦🇷 Streamer argentino de música", image: "" },
+        { name: "LOLO", hint: "🇦🇷 Streamer argentino de variedad", image: "" },
+        { name: "LUQUITA RODRIGUEZ", hint: "🇦🇷 Streamer argentino reconocido por su humor", image: "" },
+        { name: "MEICA", hint: "🇦🇷 Streamer argentino de gaming y entretenimiento", image: "" },
+        { name: "OKY", hint: "🇦🇷 Streamer argentino de IRL y Just Chatting", image: "" },
+        { name: "ROD SQUARE", hint: "🇦🇷 Streamer argentino de gaming y variedad", image: "" },
+        { name: "SANTUTU", hint: "🇦🇷 Streamer argentino de Slots", image: "" },
+        { name: "SPREEN", hint: "🇦🇷 Joven streamer argentino súper popular en Kick", image: "" },
+        { name: "TOMAS MAZZA", hint: "🇦🇷 Streamer argentino de IRL y Just Chatting, hermano de Alonso", image: "" },
+        { name: "ZEKO", hint: "🇦🇷 Streamer argentino de gaming competitivo", image: "" }
+    ];
+
+    // =======================
+    // Estado del juego
+    // =======================
+    let currentWord = '';           // palabra con espacios (para mostrar)
+    let evalWord = '';              // palabra sin espacios (para evaluar y escribir)
+    let letterPositions = [];       // índices de columnas (display) donde hay letras (no espacios)
+    let currentHint = '';
+    let currentImage = '';
+    let currentGuess = '';          // sólo letras (sin espacios)
+    let guesses = [];
+    let currentRow = 0;
+    let gameOver = false;
+    let currentDifficulty = 'normal';
+    let startTime = null;
+    let timerInterval = null;
+    let stats = JSON.parse(localStorage.getItem('wordleStreamersStats')) || {
+        gamesPlayed: 0,
+        gamesWon: 0,
+        currentStreak: 0,
+        maxStreak: 0,
+        guessDistribution: [0, 0, 0, 0, 0, 0],
+        lastPlayed: null
+    };
+
+    // =======================
+    // Elementos DOM
+    // =======================
+    const gameBoard = document.getElementById('gameBoard');
+    const message = document.getElementById('message');
+    const hintText = document.getElementById('hintText');
+    const gameMode = document.getElementById('gameMode');
+    const gameTimer = document.getElementById('gameTimer');
+    const winnerImage = document.getElementById('winnerImage');
+    const hintToggle = document.getElementById('hintToggle');
+
+    // =======================
+    // Dificultad por longitud
+    // =======================
+    function lengthDifficulty(nameWithSpaces) {
+        const len = nameWithSpaces.replace(/\s+/g, '').length; // sin espacios
+        if (len <= 6) return 'normal';
+        if (len <= 9) return 'hard';
+        return 'extreme';
+    }
+
+    function candidatesByDifficulty(diff) {
+        return STREAMERS_DB.filter(s => lengthDifficulty(s.name) === diff);
+    }
+
+    function setDifficulty(diff) {
+        currentDifficulty = diff; // 'normal' | 'hard' | 'extreme'
+        // UI: activar botón
+        document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.remove('active'));
+        const btn = document.querySelector(`.difficulty-btn[data-difficulty="${diff === 'hard' ? 'hard' : diff}"]`);
+        if (btn) btn.classList.add('active');
+        gameMode.textContent = diff === 'hard' ? 'Difícil' : (diff.charAt(0).toUpperCase() + diff.slice(1));
+        // iniciar nueva partida
+        newGame();
+    }
+
+    // =======================
+    // Inicializar juego
+    // =======================
+    function initGame() {
+        updateStats();
+        newGame();
+        setupEventListeners();
+        setTimeout(adjustLayout, 50);
+    }
+
+    function newGame() {
+        if (timerInterval) clearInterval(timerInterval);
+        gameTimer.textContent = '00:00';
+        winnerImage.style.display = 'none';
+
+        // Obtener candidatos por dificultad actual
+        const diffKey = currentDifficulty === 'dificil' ? 'hard' : currentDifficulty; // por si vienen labels en español
+        let pool = candidatesByDifficulty(diffKey);
+        // Si no hay (muy raro), usar todo el set
+        if (pool.length === 0) pool = [...STREAMERS_DB];
+
+        const streamer = pool[Math.floor(Math.random() * pool.length)];
+
+        currentWord = streamer.name.toUpperCase();       // con espacios
+        evalWord    = currentWord.replace(/\s+/g, '');   // sin espacios
+        currentHint = streamer.hint;
+        currentImage = streamer.image || '';
+
+        currentGuess = '';
+        guesses = [];
+        currentRow = 0;
+        gameOver = false;
+        startTime = new Date();
+        timerInterval = setInterval(updateTimer, 1000);
+
+        hintText.textContent = currentHint;
+        message.innerHTML = '<i class="fas fa-keyboard"></i><span>¡Adivina el streamer argentino!</span>';
+        message.className = 'message';
+        gameMode.textContent = diffKey === 'hard' ? 'Difícil' : (diffKey.charAt(0).toUpperCase() + diffKey.slice(1));
+
+        document.querySelectorAll('.key').forEach(key => key.classList.remove('correct','present','absent'));
+
+        createGameBoard();
+        adjustLayout();
+    }
+
+    // =======================
+    // Tablero con espacios invisibles
+    // =======================
+    function createGameBoard() {
+        gameBoard.innerHTML = '';
+        letterPositions = [];
+        const displayLength = currentWord.length;
+        gameBoard.style.setProperty('--word-length', displayLength);
+
+        for (let i = 0; i < 6; i++) {
+            const row = document.createElement('div');
+            row.className = 'guess-row';
+            row.style.gridTemplateColumns = `repeat(${displayLength}, var(--cell-size))`;
+
+            for (let j = 0; j < displayLength; j++) {
+                const ch = currentWord[j];
+                if (ch === ' ') {
+                    const gap = document.createElement('div');
+                    gap.className = 'space-cell';
+                    gap.id = `space-${i}-${j}`;
+                    row.appendChild(gap);
+                } else {
+                    const box = document.createElement('div');
+                    box.className = 'letter-box';
+                    box.id = `box-${i}-${j}`;
+                    row.appendChild(box);
+                    if (i === 0) letterPositions.push(j);
+                }
+            }
+            gameBoard.appendChild(row);
+        }
+    }
+
+    function updateCurrentRow() {
+        for (const col of letterPositions) {
+            const box = document.getElementById(`box-${currentRow}-${col}`);
+            box.textContent = '';
+            box.classList.remove('filled');
+        }
+        for (let i = 0; i < currentGuess.length; i++) {
+            const col = letterPositions[i];
+            const box = document.getElementById(`box-${currentRow}-${col}`);
+            const letter = currentGuess[i] || '';
+            box.textContent = letter;
+            box.classList.toggle('filled', letter !== '');
+        }
+    }
+
+    function updateTimer() {
+        if (!startTime) return;
+        const now = new Date();
+        const diff = Math.floor((now - startTime) / 1000);
+        const minutes = Math.floor(diff / 60).toString().padStart(2, '0');
+        const seconds = (diff % 60).toString().padStart(2, '0');
+        gameTimer.textContent = `${minutes}:${seconds}`;
+    }
+
+    function setupEventListeners() {
+        document.addEventListener('keydown', (e) => {
+            if (gameOver) return;
+            const key = e.key.toLowerCase();
+            if (key === 'enter') {
+                e.preventDefault();
+                handleKeyPress('enter');
+            } else if (key === 'backspace') {
+                handleKeyPress('backspace');
+            } else if (key.match(/^[a-zñ]$/i)) {
+                handleKeyPress(key);
+            }
+        });
+
+        document.getElementById('keyboard').addEventListener('click', (e) => {
+            const target = e.target.closest('.key');
+            if (!target) return;
+            handleKeyPress(target.dataset.key);
+        });
+
+        // Botones de dificultad: ahora cambian SIEMPRE y reinician juego
+        document.querySelectorAll('.difficulty-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const diffAttr = btn.dataset.difficulty; // 'normal' | 'hard' | 'extreme'
+                setDifficulty(diffAttr);
+            });
+        });
+
+        hintToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            hintText.style.display = hintText.style.display === 'none' ? 'block' : 'none';
+            e.target.innerHTML = hintText.style.display === 'none'
+                ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
+            adjustLayout();
+        });
+
+        document.getElementById('howToPlayBtn').addEventListener('click', () => {
+            alert("Cómo jugar:\n\n1. Adivina el streamer argentino en 6 intentos.\n2. Letras verdes: posición correcta.\n3. Letras amarillas: letra correcta pero posición incorrecta.\n4. Letras grises: letra no está en la palabra.\n\nNota: Los espacios entre palabras no se adivinan.");
+        });
+
+        document.getElementById('streamersBtn').addEventListener('click', () => {
+            alert("Lista de streamers posibles:\n\n" + STREAMERS_DB.map(s => s.name).join(", "));
+        });
+
+        window.addEventListener('resize', adjustLayout);
+    }
+
+    // =======================
+    // Layout responsive del tablero y celdas
+    // =======================
+    function adjustLayout() {
+        const rootStyles = getComputedStyle(document.documentElement);
+        const gap = parseFloat(rootStyles.getPropertyValue('--spacing-unit')) || 8;
+        const minGap = 16;
+
+        const hint = document.getElementById('hint');
+        const messageEl = document.getElementById('message');
+
+        const currentGap = gameBoard.offsetTop - (hint.offsetTop + hint.offsetHeight);
+        if (currentGap < minGap) hint.style.marginBottom = `${minGap - currentGap}px`;
+        else hint.style.marginBottom = '';
+
+        messageEl.style.marginTop = `${minGap}px`;
+
+        const hintRect = hint.getBoundingClientRect();
+        const msgRect = messageEl.getBoundingClientRect();
+
+        let availableH = msgRect.top - hintRect.bottom - (minGap * 2);
+        if (availableH < 120) availableH = 120;
+
+        const displayCols = currentWord.length; // incluye espacios
+        const rows = 6;
+        const boardInnerW = gameBoard.clientWidth - (displayCols - 1) * gap;
+        const boardInnerH = availableH - (rows - 1) * gap;
+
+        let cellSize = Math.floor(Math.min(boardInnerW / displayCols, boardInnerH / rows));
+        cellSize = Math.max(28, Math.min(cellSize, 72));
+
+        document.documentElement.style.setProperty('--cell-size', `${cellSize}px`);
+        const totalBoardH = cellSize * rows + gap * (rows - 1);
+        gameBoard.style.height = `${totalBoardH}px`;
+
+        document.querySelectorAll('.letter-box').forEach(box => {
+            box.style.fontSize = `${Math.max(16, Math.floor(cellSize * 0.5))}px`;
+        });
+
+        document.querySelectorAll('.guess-row').forEach(row => {
+            row.style.gridTemplateColumns = `repeat(${displayCols}, var(--cell-size))`;
+        });
+    }
+
+    // =======================
+    // Input y validación (sin contar espacios)
+    // =======================
+    function handleKeyPress(key) {
+        if (gameOver) return;
+
+        if (key === 'enter') {
+            if (currentGuess.length === evalWord.length) {
+                submitGuess();
+            } else {
+                showMessage('¡La respuesta tiene ' + evalWord.length + ' letras!', 'error');
+            }
+        } else if (key === 'backspace') {
+            if (currentGuess.length > 0) {
+                currentGuess = currentGuess.slice(0, -1);
+                updateCurrentRow();
+            }
+        } else if (/^[a-zñ]$/i.test(key) && currentGuess.length < evalWord.length) {
+            currentGuess += key.toUpperCase();
+            updateCurrentRow();
+        }
+    }
+
+    // =======================
+    // Evaluación ignorando espacios
+    // =======================
+    function submitGuess() {
+        const guess = currentGuess; // sin espacios
+        guesses.push(guess);
+
+        const result = checkGuess(guess, evalWord); // resultado por letra (sin espacios)
+        animateGuess(result);
+        updateKeyboard(guess, result);
+
+        if (guess === evalWord) {
+            setTimeout(() => {
+                if (currentImage) {
+                    winnerImage.src = currentImage;
+                    winnerImage.style.display = 'block';
+                    winnerImage.onerror = () => winnerImage.style.display = 'none';
+                }
+                showMessage(`🎉 ¡Correcto! ¡${currentWord}! 🎉`, 'success');
+                gameOver = true;
+                stats.gamesWon++;
+                stats.currentStreak++;
+                stats.maxStreak = Math.max(stats.maxStreak, stats.currentStreak);
+                stats.gamesPlayed++;
+                stats.guessDistribution[currentRow]++;
+                stats.lastPlayed = new Date().toDateString();
+                saveStats();
+                updateStats();
+            }, 600);
+        } else if (currentRow === 5) {
+            setTimeout(() => {
+                showMessage(`💔 ¡Game Over! Era: ${currentWord}`, 'error');
+                gameOver = true;
+                stats.currentStreak = 0;
+                stats.gamesPlayed++;
+                stats.lastPlayed = new Date().toDateString();
+                saveStats();
+                updateStats();
+            }, 600);
+        } else {
+            currentRow++;
+            currentGuess = '';
+            showMessage('¡Sigue intentando!');
+        }
+    }
+
+    function checkGuess(guessNoSpace, wordNoSpace) {
+        const result = new Array(wordNoSpace.length).fill('absent');
+        const wordArr = wordNoSpace.split('');
+        const guessArr = guessNoSpace.split('');
+
+        // Correctas
+        for (let i = 0; i < guessArr.length; i++) {
+            if (guessArr[i] === wordArr[i]) {
+                result[i] = 'correct';
+                wordArr[i] = null;
+                guessArr[i] = null;
+            }
+        }
+        // Presentes
+        for (let i = 0; i < guessArr.length; i++) {
+            if (guessArr[i] !== null) {
+                const idx = wordArr.indexOf(guessArr[i]);
+                if (idx !== -1) {
+                    result[i] = 'present';
+                    wordArr[idx] = null;
+                }
+            }
+        }
+        return result;
+    }
+
+    function animateGuess(result) {
+        for (let i = 0; i < result.length; i++) {
+            const col = letterPositions[i];
+            const box = document.getElementById(`box-${currentRow}-${col}`);
+            setTimeout(() => { box.classList.add(result[i]); }, i * 100);
+        }
+    }
+
+    function updateKeyboard(guessNoSpace, result) {
+        for (let i = 0; i < guessNoSpace.length; i++) {
+            const letter = guessNoSpace[i].toLowerCase();
+            const key = document.querySelector(`[data-key="${letter}"]`);
+            const status = result[i];
+            if (key && !key.classList.contains('correct')) {
+                if (status === 'correct') {
+                    key.classList.remove('present', 'absent');
+                    key.classList.add('correct');
+                } else if (status === 'present' && !key.classList.contains('correct')) {
+                    key.classList.remove('absent');
+                    key.classList.add('present');
+                } else if (status === 'absent' && !key.classList.contains('correct') && !key.classList.contains('present')) {
+                    key.classList.add('absent');
+                }
+            }
+        }
+    }
+
+    function showMessage(text, type = '') {
+        const messageContent = document.querySelector('#message span') || document.createElement('span');
+        messageContent.textContent = text;
+
+        message.innerHTML = '';
+        message.appendChild(document.createElement('i')).className = 'fas fa-keyboard';
+        message.appendChild(messageContent);
+        if (type === 'success' && winnerImage.style.display === 'block') {
+            message.appendChild(winnerImage);
+        }
+        message.className = type ? `message ${type}` : 'message';
+        adjustLayout();
+    }
+
+    function updateStats() {
+        document.getElementById('gamesPlayed').textContent = stats.gamesPlayed;
+        document.getElementById('winPercentage').textContent =
+            stats.gamesPlayed > 0 ? `${Math.round((stats.gamesWon / stats.gamesPlayed) * 100)}%` : '0%';
+        document.getElementById('currentStreak').textContent = stats.currentStreak;
+        document.getElementById('maxStreak').textContent = stats.maxStreak;
+    }
+
+    function saveStats() {
+        localStorage.setItem('wordleStreamersStats', JSON.stringify(stats));
+    }
+
+    // Iniciar
+    window.onload = initGame;
+</script>
