@@ -1,0 +1,2067 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coin Flip - Girar la Moneda | Generador Aleatorio Justo</title>
+    <meta name="description" content="Lanza una moneda virtual con animación fluida. Generador aleatorio 50/50 justo, historial de resultados y función para compartir. Disponible en español e inglés.">
+    <meta name="keywords" content="coin flip, girar moneda, cara o cruz, generador aleatorio, lanzar moneda">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://coinflip.example.com/">
+    <meta property="og:title" content="Coin Flip - Girar la Moneda">
+    <meta property="og:description" content="Lanza una moneda virtual con animación fluida. Generador aleatorio 50/50 justo.">
+    <meta property="og:image" content="https://coinflip.example.com/og-image.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://coinflip.example.com/">
+    <meta property="twitter:title" content="Coin Flip - Girar la Moneda">
+    <meta property="twitter:description" content="Lanza una moneda virtual con animación fluida. Generador aleatorio 50/50 justo.">
+    <meta property="twitter:image" content="https://coinflip.example.com/og-image.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2245%22 fill=%22%23f59e0b%22/><text x=%2250%22 y=%2260%22 font-size=%2240%22 text-anchor=%22middle%22 fill=%22white%22>₡</text></svg>">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="data:application/json,{%22name%22:%22Coin%20Flip%22,%22short_name%22:%22CoinFlip%22,%22icons%22:[{%22src%22:%22data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23f59e0b'/><text x='50' y='60' font-size='40' text-anchor='middle' fill='white'>₡</text></svg>%22,%22sizes%22:%22any%22,%22type%22:%22image/svg+xml%22}],%22start_url%22:%22/%22,%22display%22:%22standalone%22,%22theme_color%22:%22%23f59e0b%22,%22background_color%22:%22%23ffffff%22}">
+
+    <style>
+        /* Reset y variables CSS */
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --primary-light: #c7d2fe;
+            --secondary: #64748b;
+            --accent: #f59e0b;
+            --accent-hover: #d97706;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            
+            /* Glassmorphism y fondos */
+            --bg-primary: #fafbff;
+            --bg-secondary: rgba(255, 255, 255, 0.8);
+            --bg-card: rgba(255, 255, 255, 0.7);
+            --bg-glass: rgba(255, 255, 255, 0.1);
+            
+            /* Gradientes */
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-gold: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+            --gradient-silver: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 100%);
+            --gradient-bg: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            
+            /* Textos */
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            
+            /* Bordes y sombras */
+            --border: rgba(226, 232, 240, 0.8);
+            --border-glass: rgba(255, 255, 255, 0.18);
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -1px rgb(0 0 0 / 0.06);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04);
+            --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.3);
+            --shadow-coin: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            
+            --radius: 16px;
+            --radius-lg: 24px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-fast: all 0.15s ease;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0f0f23;
+            --bg-secondary: rgba(30, 41, 59, 0.8);
+            --bg-card: rgba(30, 41, 59, 0.7);
+            --bg-glass: rgba(255, 255, 255, 0.05);
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #64748b;
+            --border: rgba(51, 65, 85, 0.8);
+            --border-glass: rgba(255, 255, 255, 0.1);
+            --gradient-bg: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #581c87 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: var(--gradient-bg);
+            background-attachment: fixed;
+            transition: var(--transition);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Partículas de fondo animadas */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(120, 200, 255, 0.3) 0%, transparent 50%);
+            animation: floatingBg 20s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        @keyframes floatingBg {
+            0%, 100% {
+                opacity: 0.3;
+                transform: scale(1) rotate(0deg);
+            }
+            33% {
+                opacity: 0.5;
+                transform: scale(1.1) rotate(120deg);
+            }
+            66% {
+                opacity: 0.4;
+                transform: scale(0.9) rotate(240deg);
+            }
+        }
+
+        /* Layout principal con glassmorphism */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem;
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            align-items: start;
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+
+        @media (min-width: 1024px) {
+            .container {
+                grid-template-columns: 2fr 1fr;
+                padding: 2rem;
+                gap: 3rem;
+            }
+        }
+
+        /* Header mejorado */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            background: var(--bg-secondary);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.75rem;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+        }
+
+        .logo::before {
+            content: '🪙';
+            font-size: 2rem;
+            animation: coinRotate 4s linear infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes coinRotate {
+            from { transform: rotateY(0deg); }
+            to { transform: rotateY(360deg); }
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        /* Botones modernos con efectos */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            background: var(--bg-glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-glass);
+            color: var(--text-primary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: var(--transition);
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover, .btn:focus {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-light);
+            outline: none;
+        }
+
+        .btn:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+            font-size: 1.25rem;
+            padding: 1.25rem 2.5rem;
+            min-height: 3.5rem;
+            border: none;
+            box-shadow: var(--shadow-glow);
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: var(--shadow-xl), var(--shadow-glow);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: var(--shadow);
+        }
+
+        /* Área principal de la moneda con efectos dramáticos */
+        .coin-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2.5rem;
+            text-align: center;
+            min-height: 600px;
+            justify-content: center;
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-glass);
+            padding: 3rem 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .coin-area::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg, transparent, rgba(99, 102, 241, 0.1), transparent);
+            animation: rotate 10s linear infinite;
+            z-index: -1;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .coin-container {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            margin: 2rem 0;
+        }
+
+        @media (min-width: 768px) {
+            .coin-container {
+                width: 320px;
+                height: 320px;
+            }
+        }
+
+        .coin {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 1.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+            cursor: pointer;
+            filter: drop-shadow(var(--shadow-coin));
+        }
+
+        .coin:hover {
+            transform: scale(1.05);
+        }
+
+        .coin-side {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 5rem;
+            font-weight: 900;
+            backface-visibility: hidden;
+            border: 6px solid;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .coin-side::before {
+            content: '';
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3), transparent 50%);
+            z-index: 1;
+        }
+
+        .coin-side::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle at 70% 70%, transparent 40%, rgba(0, 0, 0, 0.1) 100%);
+            z-index: 2;
+        }
+
+        .coin-heads {
+            background: var(--gradient-gold);
+            border-color: #d97706;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .coin-tails {
+            background: var(--gradient-silver);
+            border-color: #64748b;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            transform: rotateY(0deg);
+            display: none; /* Ocultar por defecto */
+        }
+
+        .coin.flipping {
+            animation: coinFlip3D 1.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+
+        @keyframes coinFlip3D {
+            0% { 
+                transform: rotateY(0deg) rotateX(0deg) scale(1); 
+                filter: drop-shadow(var(--shadow-coin));
+            }
+            25% { 
+                transform: rotateY(450deg) rotateX(180deg) scale(1.2); 
+                filter: drop-shadow(0 40px 80px rgba(0, 0, 0, 0.3)) brightness(1.2);
+            }
+            50% { 
+                transform: rotateY(900deg) rotateX(360deg) scale(1.3); 
+                filter: drop-shadow(0 50px 100px rgba(0, 0, 0, 0.4)) brightness(1.3);
+            }
+            75% { 
+                transform: rotateY(1350deg) rotateX(540deg) scale(1.2); 
+                filter: drop-shadow(0 40px 80px rgba(0, 0, 0, 0.3)) brightness(1.2);
+            }
+            100% { 
+                transform: rotateY(1800deg) rotateX(720deg) scale(1); 
+                filter: drop-shadow(var(--shadow-coin));
+            }
+        }
+
+        .coin.heads {
+            transform: rotateY(0deg);
+        }
+
+        .coin.tails {
+            transform: rotateY(0deg);
+        }
+
+        /* Reducción de movimiento */
+        @media (prefers-reduced-motion: reduce) {
+            body::before {
+                animation: none;
+            }
+            
+            .coin {
+                transition: transform 0.3s ease;
+            }
+            
+            .coin.flipping {
+                animation: coinFlipReduced 0.3s ease;
+            }
+            
+            @keyframes coinFlipReduced {
+                0% { transform: rotateY(0deg) scale(1); }
+                50% { transform: rotateY(90deg) scale(1.05); }
+                100% { transform: rotateY(180deg) scale(1); }
+            }
+        }
+
+        /* Resultado actual con efectos tipográficos */
+        .result {
+            font-size: 2rem;
+            font-weight: 800;
+            margin: 1.5rem 0;
+            min-height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-glass);
+            backdrop-filter: blur(10px);
+            border-radius: var(--radius);
+            padding: 1rem 2rem;
+            border: 1px solid var(--border-glass);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .result::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: var(--transition);
+        }
+
+        .result.heads {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.1));
+            color: var(--accent);
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        .result.heads::before {
+            left: 100%;
+        }
+
+        .result.tails {
+            background: linear-gradient(135deg, rgba(100, 116, 139, 0.2), rgba(71, 85, 105, 0.1));
+            color: var(--secondary);
+            border-color: rgba(100, 116, 139, 0.3);
+        }
+
+        .result.tails::before {
+            left: 100%;
+        }
+
+        /* Panel lateral con glassmorphism avanzado */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Estadísticas con efectos visuales */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .stat {
+            text-align: center;
+            padding: 1.5rem;
+            background: var(--bg-glass);
+            backdrop-filter: blur(10px);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-glass);
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .stat::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--gradient-primary);
+            transform: scaleX(0);
+            transition: var(--transition);
+        }
+
+        .stat:hover::before {
+            transform: scaleX(1);
+        }
+
+        .stat:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            display: block;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Historial con diseño moderno */
+        .history-list {
+            max-height: 400px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            padding-right: 0.5rem;
+        }
+
+        .history-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .history-list::-webkit-scrollbar-track {
+            background: var(--bg-glass);
+            border-radius: 3px;
+        }
+
+        .history-list::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 3px;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.25rem;
+            background: var(--bg-glass);
+            backdrop-filter: blur(10px);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-glass);
+            font-size: 0.875rem;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .history-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--gradient-primary);
+            transform: scaleY(0);
+            transition: var(--transition);
+        }
+
+        .history-item:hover {
+            transform: translateX(4px);
+            box-shadow: var(--shadow);
+        }
+
+        .history-item:hover::before {
+            transform: scaleY(1);
+        }
+
+        .history-result {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 700;
+        }
+
+        .history-result.heads {
+            color: var(--accent);
+        }
+
+        .history-result.tails {
+            color: var(--secondary);
+        }
+
+        .history-time {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 500;
+            background: var(--bg-glass);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-glass);
+        }
+
+        /* Configuración con switches animados */
+        .setting {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: var(--bg-glass);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-glass);
+            transition: var(--transition);
+        }
+
+        .setting:last-child {
+            margin-bottom: 0;
+        }
+
+        .setting:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow);
+        }
+
+        .toggle {
+            position: relative;
+            width: 52px;
+            height: 28px;
+            background: var(--border);
+            border-radius: 14px;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .toggle.active {
+            background: var(--primary);
+            box-shadow: var(--shadow-glow), inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+        }
+
+        .toggle.active .toggle-slider {
+            transform: translateX(24px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .select {
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius);
+            background: var(--bg-glass);
+            backdrop-filter: blur(10px);
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        /* Toast notifications mejoradas */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            color: var(--text-primary);
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+            font-weight: 600;
+            z-index: 1000;
+            transition: var(--transition);
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--border-glass);
+            min-width: 200px;
+            text-align: center;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Responsivo mejorado */
+        @media (max-width: 1023px) {
+            .container {
+                gap: 1.5rem;
+            }
+            
+            .coin-container {
+                width: 240px;
+                height: 240px;
+                margin: 1.5rem 0;
+            }
+            
+            .coin-side {
+                font-size: 4rem;
+            }
+            
+            .coin-area {
+                padding: 2rem 1.5rem;
+                min-height: 500px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .card {
+                padding: 1.5rem;
+            }
+            
+            .result {
+                font-size: 1.5rem;
+                padding: 0.75rem 1.5rem;
+            }
+            
+            .btn-primary {
+                font-size: 1.125rem;
+                padding: 1rem 2rem;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 1rem;
+                gap: 1rem;
+            }
+            
+            .coin-container {
+                width: 200px;
+                height: 200px;
+                margin: 1rem 0;
+            }
+            
+            .coin-side {
+                font-size: 3.5rem;
+                border-width: 4px;
+            }
+            
+            .coin-area {
+                padding: 1.5rem 1rem;
+                gap: 1.5rem;
+            }
+            
+            .header {
+                padding: 1rem;
+            }
+            
+            .logo {
+                font-size: 1.5rem;
+            }
+            
+            .controls {
+                gap: 0.5rem;
+            }
+            
+            .btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
+            }
+            
+            .btn-primary {
+                font-size: 1rem;
+                padding: 0.875rem 1.5rem;
+            }
+        }
+
+        /* Utilidades */
+        .visually-hidden {
+            position: absolute !important;
+            width: 1px !important;
+            height: 1px !important;
+            padding: 0 !important;
+            margin: -1px !important;
+            overflow: hidden !important;
+            clip: rect(0, 0, 0, 0) !important;
+            white-space: nowrap !important;
+            border: 0 !important;
+        }
+
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        /* Animación de confeti mejorada */
+        @keyframes confetti {
+            0% {
+                transform: translateY(0) rotate(0deg) scale(1);
+                opacity: 1;
+            }
+            25% {
+                transform: translateY(-25px) rotate(90deg) scale(1.2);
+                opacity: 0.8;
+            }
+            50% {
+                transform: translateY(-50px) rotate(180deg) scale(1);
+                opacity: 0.6;
+            }
+            75% {
+                transform: translateY(-75px) rotate(270deg) scale(0.8);
+                opacity: 0.4;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg) scale(0.5);
+                opacity: 0;
+            }
+        }
+
+        .confetti {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            animation: confetti 1.5s ease-out forwards;
+            z-index: 10;
+        }
+
+        /* Efectos de partículas para las rachas */
+        .streak-effect {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, transparent 70%);
+            animation: pulse 2s ease-in-out infinite;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: translate(-50%, -50%) scale(0.8);
+                opacity: 0.7;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.2);
+                opacity: 0.3;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(0.8);
+                opacity: 0.7;
+            }
+        }
+
+        /* Mejoras para dark mode */
+        [data-theme="dark"] .coin-heads {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            border-color: #d97706;
+        }
+
+        [data-theme="dark"] .coin-tails {
+            background: linear-gradient(135deg, #94a3b8, #64748b);
+            border-color: #475569;
+        }
+
+        [data-theme="dark"] .toast {
+            background: rgba(30, 41, 59, 0.95);
+            border-color: rgba(71, 85, 105, 0.8);
+        }
+
+        /* Animación de entrada para elementos */
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Efectos de hover avanzados */
+        .btn:hover {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+        }
+
+        .card:hover .card-title {
+            text-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+        }
+
+        /* Indicador de modo semilla activo */
+        .seed-indicator {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: var(--warning);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            font-size: 0.75rem;
+            font-weight: 700;
+            z-index: 1000;
+            animation: slideInRight 0.3s ease-out;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <span data-translate="title">Coin Flip</span>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" onclick="toggleTheme()" aria-label="Cambiar tema">
+                <span id="theme-icon">🌙</span>
+            </button>
+            
+            <select class="select" id="language-select" onchange="changeLanguage(this.value)">
+                <option value="es">Español</option>
+                <option value="en">English</option>
+            </select>
+            
+            <button class="btn" onclick="toggleSound()" aria-label="Alternar sonido">
+                <span id="sound-icon">🔊</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Área principal de la moneda -->
+        <section class="coin-area" role="main">
+            <div class="coin-container">
+                <div class="coin" id="coin" tabindex="0" role="button" aria-label="Lanzar moneda (presiona Enter o Espacio)" onclick="flipCoin()">
+                    <div class="coin-side coin-heads">
+                        <span data-translate="heads_symbol">C</span>
+                    </div>
+                    <div class="coin-side coin-tails">
+                        <span data-translate="tails_symbol">+</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="result" id="result" role="status" aria-live="polite">
+                <span data-translate="click_to_flip">Haz clic para lanzar la moneda</span>
+            </div>
+            
+            <button class="btn btn-primary" id="flip-btn" onclick="flipCoin()">
+                <span data-translate="flip_button">Girar</span>
+            </button>
+            
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+                <button class="btn" onclick="shareResult()">
+                    📋 <span data-translate="share">Compartir</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Panel lateral -->
+        <aside class="sidebar" role="complementary">
+            <!-- Estadísticas -->
+            <div class="card">
+                <h2 class="card-title">
+                    <span data-translate="statistics">Estadísticas</span>
+                    <button class="btn" onclick="resetStats()" data-translate="reset" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                        Reiniciar
+                    </button>
+                </h2>
+                
+                <div class="stats-grid">
+                    <div class="stat">
+                        <span class="stat-value" id="total-flips">0</span>
+                        <span class="stat-label" data-translate="total">Total</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value" id="heads-count">0</span>
+                        <span class="stat-label" data-translate="heads">Caras</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value" id="tails-count">0</span>
+                        <span class="stat-label" data-translate="tails">Cruces</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value" id="current-streak">0</span>
+                        <span class="stat-label" data-translate="current_streak">Racha actual</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Historial -->
+            <div class="card">
+                <h2 class="card-title">
+                    <span data-translate="history">Historial</span>
+                    <span class="stat-value" style="font-size: 0.875rem; color: var(--text-secondary);" id="max-streak">
+                        <span data-translate="max_streak">Mejor racha:</span> 0
+                    </span>
+                </h2>
+                
+                <div class="history-list" id="history-list" role="log" aria-label="Historial de lanzamientos">
+                    <div style="text-align: center; color: var(--text-secondary); padding: 2rem; font-style: italic;">
+                        <span data-translate="no_history">No hay lanzamientos todavía</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Configuración -->
+            <div class="card">
+                <h2 class="card-title" data-translate="settings">Configuración</h2>
+                
+                <div class="setting">
+                    <span data-translate="seed_mode">Modo semilla</span>
+                    <div class="toggle" id="seed-toggle" onclick="toggleSeed()" role="switch" aria-checked="false" tabindex="0">
+                        <div class="toggle-slider"></div>
+                    </div>
+                </div>
+                
+                <div class="setting" style="margin-top: 1rem; display: none;" id="seed-input-container">
+                    <label for="seed-input" style="flex: 1;">
+                        <span data-translate="seed_value">Valor semilla:</span>
+                        <input type="text" id="seed-input" class="select" style="width: 100%; margin-top: 0.5rem;" placeholder="123456" oninput="updateSeed(this.value)">
+                    </label>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <!-- Toast para notificaciones -->
+    <div class="toast" id="toast" role="alert" aria-live="assertive"></div>
+
+    <script>
+        // Estado global de la aplicación
+        let gameState = {
+            total: 0,
+            heads: 0,
+            tails: 0,
+            currentStreak: 0,
+            maxStreak: 0,
+            currentStreakType: null,
+            history: [],
+            isFlipping: false,
+            seedMode: false,
+            seed: null,
+            rng: null,
+            soundEnabled: true,
+            theme: 'light',
+            language: 'es'
+        };
+
+        // Traducciones
+        const translations = {
+            es: {
+                title: "Coin Flip",
+                heads: "Caras",
+                tails: "Cruces", 
+                heads_symbol: "C",
+                tails_symbol: "+",
+                click_to_flip: "Haz clic para lanzar la moneda",
+                flip_button: "Girar",
+                share: "Compartir",
+                statistics: "Estadísticas",
+                reset: "Reiniciar",
+                total: "Total",
+                current_streak: "Racha actual",
+                history: "Historial",
+                max_streak: "Mejor racha:",
+                no_history: "No hay lanzamientos todavía",
+                settings: "Configuración",
+                seed_mode: "Modo semilla",
+                seed_value: "Valor semilla:",
+                result_heads: "¡Cara!",
+                result_tails: "¡Cruz!",
+                copied: "Copiado al portapapeles",
+                share_text: "Resultado: {result} | Total: {total} ({heads} caras, {tails} cruces)",
+                confirm_reset: "¿Estás seguro de que quieres reiniciar todas las estadísticas?"
+            },
+            en: {
+                title: "Coin Flip",
+                heads: "Heads",
+                tails: "Tails",
+                heads_symbol: "H",
+                tails_symbol: "T",
+                click_to_flip: "Click to flip the coin",
+                flip_button: "Flip",
+                share: "Share",
+                statistics: "Statistics",
+                reset: "Reset",
+                total: "Total",
+                current_streak: "Current streak",
+                history: "History",
+                max_streak: "Best streak:",
+                no_history: "No flips yet",
+                settings: "Settings",
+                seed_mode: "Seed mode",
+                seed_value: "Seed value:",
+                result_heads: "Heads!",
+                result_tails: "Tails!",
+                copied: "Copied to clipboard",
+                share_text: "Result: {result} | Total: {total} ({heads} heads, {tails} tails)",
+                confirm_reset: "Are you sure you want to reset all statistics?"
+            }
+        };
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+            setupEventListeners();
+            loadState();
+            updateDisplay();
+            
+            // Detectar idioma del navegador
+            const browserLang = navigator.language.split('-')[0];
+            if (browserLang === 'en' && !localStorage.getItem('coin-flip-language')) {
+                changeLanguage('en');
+            }
+            
+            // Detectar tema del sistema
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches && !localStorage.getItem('coin-flip-theme')) {
+                setTheme('dark');
+            }
+        });
+
+        function initializeApp() {
+            // Verificar soporte para crypto.getRandomValues
+            if (!window.crypto || !window.crypto.getRandomValues) {
+                showToast('Tu navegador no soporta generación criptográfica segura. Los resultados pueden no ser completamente aleatorios.');
+            }
+            
+            // Configurar semilla desde URL solo si es posible
+            try {
+                if (window.location.protocol !== 'about:' && window.location.hostname !== 'claudeusercontent.com') {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const seedParam = urlParams.get('seed');
+                    if (seedParam) {
+                        gameState.seedMode = true;
+                        gameState.seed = seedParam;
+                        document.getElementById('seed-input').value = seedParam;
+                        updateSeed(seedParam);
+                        toggleSeedUI(true);
+                    }
+                }
+            } catch (e) {
+                console.log('URL parameters not available in this environment');
+            }
+        }
+
+        function setupEventListeners() {
+            // Teclado
+            document.addEventListener('keydown', function(e) {
+                if (e.code === 'Space' || e.code === 'Enter') {
+                    e.preventDefault();
+                    if (!gameState.isFlipping) {
+                        flipCoin();
+                    }
+                }
+            });
+
+            // Focus en la moneda
+            document.getElementById('coin').addEventListener('keydown', function(e) {
+                if (e.code === 'Space' || e.code === 'Enter') {
+                    e.preventDefault();
+                    if (!gameState.isFlipping) {
+                        flipCoin();
+                    }
+                }
+            });
+
+            // Touch gestures
+            let touchStartY = 0;
+            let touchEndY = 0;
+
+            document.addEventListener('touchstart', function(e) {
+                touchStartY = e.changedTouches[0].screenY;
+            });
+
+            document.addEventListener('touchend', function(e) {
+                touchEndY = e.changedTouches[0].screenY;
+                handleGesture();
+            });
+
+            function handleGesture() {
+                const threshold = 50;
+                if (Math.abs(touchStartY - touchEndY) > threshold && !gameState.isFlipping) {
+                    flipCoin();
+                }
+            }
+
+            // Toggle switch para semilla
+            document.getElementById('seed-toggle').addEventListener('keydown', function(e) {
+                if (e.code === 'Space' || e.code === 'Enter') {
+                    e.preventDefault();
+                    toggleSeed();
+                }
+            });
+
+            // Detectar cambios en el tema del sistema
+            if (window.matchMedia) {
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+                    if (!localStorage.getItem('coin-flip-theme')) {
+                        setTheme(e.matches ? 'dark' : 'light');
+                    }
+                });
+            }
+        }
+
+        // Generación de números aleatorios
+        function getRandomBit() {
+            if (gameState.seedMode && gameState.rng) {
+                // Usando semilla - Simple Linear Congruential Generator
+                gameState.rng = (gameState.rng * 9301 + 49297) % 233280;
+                return gameState.rng / 233280 < 0.5 ? 0 : 1;
+            } else {
+                // Usando crypto.getRandomValues para verdadera aleatoriedad
+                try {
+                    const array = new Uint32Array(1);
+                    window.crypto.getRandomValues(array);
+                    return array[0] % 2;
+                } catch (e) {
+                    // Fallback si crypto no está disponible
+                    return Math.random() < 0.5 ? 0 : 1;
+                }
+            }
+        }
+
+        // Función principal para lanzar la moneda
+        async function flipCoin() {
+            if (gameState.isFlipping) return;
+            
+            gameState.isFlipping = true;
+            const coin = document.getElementById('coin');
+            const flipBtn = document.getElementById('flip-btn');
+            const result = document.getElementById('result');
+            
+            // Deshabilitar interfaz
+            flipBtn.disabled = true;
+            coin.classList.add('loading');
+            
+            // Limpiar efectos previos
+            coin.classList.remove('heads', 'tails');
+            
+            // Añadir efecto de racha si es necesario
+            if (gameState.currentStreak >= 3) {
+                addStreakEffect();
+            }
+            
+            // Animación
+            coin.classList.add('flipping');
+            
+            // Generar resultado
+            const isHeads = getRandomBit() === 0;
+            const resultText = isHeads ? 'heads' : 'tails';
+            
+            // Esperar animación
+            const animationDuration = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 300 : 1200;
+            
+            setTimeout(() => {
+                // Mostrar resultado - ambos lados en la misma posición
+                coin.classList.remove('flipping');
+                
+                // Cambiar la cara visible sin rotar la moneda
+                const headsElement = coin.querySelector('.coin-heads');
+                const tailsElement = coin.querySelector('.coin-tails');
+                
+                if (isHeads) {
+                    headsElement.style.display = 'flex';
+                    tailsElement.style.display = 'none';
+                    coin.classList.add('heads');
+                } else {
+                    headsElement.style.display = 'none';
+                    tailsElement.style.display = 'flex';
+                    tailsElement.style.transform = 'rotateY(0deg)'; // Asegurar que esté en la misma posición
+                    coin.classList.add('tails');
+                }
+                
+                // Actualizar estado
+                updateGameState(isHeads);
+                
+                // Mostrar resultado en texto con animación
+                const resultKey = isHeads ? 'result_heads' : 'result_tails';
+                result.textContent = translate(resultKey);
+                result.className = `result ${resultText} fade-in`;
+                
+                // Sonido y vibración
+                playSound(resultText);
+                vibrate();
+                
+                // Confeti opcional (solo si no está reducido el movimiento)
+                if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && gameState.currentStreak > 0 && gameState.currentStreak % 5 === 0) {
+                    createConfetti();
+                }
+                
+                // Actualizar display
+                updateDisplay();
+                saveState();
+                
+                // Rehabilitar interfaz
+                gameState.isFlipping = false;
+                flipBtn.disabled = false;
+                coin.classList.remove('loading');
+                
+            }, animationDuration);
+        }
+
+        // Función para lanzar múltiples monedas con mejor manejo
+        async function flipMultiple(count) {
+            if (gameState.isFlipping) return;
+            
+            const flipBtn = document.getElementById('flip-btn');
+            const originalText = flipBtn.innerHTML;
+            
+            for (let i = 0; i < count; i++) {
+                // Actualizar progreso en el botón
+                flipBtn.innerHTML = `<span>Lanzando... ${i + 1}/${count}</span>`;
+                
+                await new Promise(resolve => {
+                    flipCoin();
+                    // Esperar menos tiempo entre lanzamientos para mejor UX
+                    setTimeout(resolve, 150);
+                });
+                
+                // Pequeña pausa para que el usuario pueda seguir los resultados
+                if (i < count - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+            }
+            
+            // Restaurar botón
+            flipBtn.innerHTML = originalText;
+            showToast(`¡${count} lanzamientos completados!`);
+        }
+
+        // Actualizar estado del juego
+        function updateGameState(isHeads) {
+            gameState.total++;
+            
+            if (isHeads) {
+                gameState.heads++;
+            } else {
+                gameState.tails++;
+            }
+            
+            // Calcular rachas
+            if (gameState.currentStreakType === null) {
+                gameState.currentStreakType = isHeads ? 'heads' : 'tails';
+                gameState.currentStreak = 1;
+            } else if ((isHeads && gameState.currentStreakType === 'heads') || 
+                      (!isHeads && gameState.currentStreakType === 'tails')) {
+                gameState.currentStreak++;
+            } else {
+                gameState.currentStreakType = isHeads ? 'heads' : 'tails';
+                gameState.currentStreak = 1;
+            }
+            
+            // Actualizar racha máxima
+            if (gameState.currentStreak > gameState.maxStreak) {
+                gameState.maxStreak = gameState.currentStreak;
+            }
+            
+            // Agregar al historial
+            const timestamp = new Date();
+            gameState.history.unshift({
+                result: isHeads ? 'heads' : 'tails',
+                timestamp: timestamp,
+                number: gameState.total
+            });
+            
+            // Limitar historial a 50 elementos
+            if (gameState.history.length > 50) {
+                gameState.history = gameState.history.slice(0, 50);
+            }
+        }
+
+        // Actualizar display
+        function updateDisplay() {
+            // Estadísticas
+            document.getElementById('total-flips').textContent = gameState.total;
+            document.getElementById('heads-count').textContent = gameState.heads;
+            document.getElementById('tails-count').textContent = gameState.tails;
+            document.getElementById('current-streak').textContent = gameState.currentStreak;
+            document.getElementById('max-streak').innerHTML = `<span data-translate="max_streak">${translate('max_streak')}</span> ${gameState.maxStreak}`;
+            
+            // Historial
+            updateHistoryDisplay();
+            
+            // Traducciones
+            updateTranslations();
+        }
+
+        // Actualizar historial
+        function updateHistoryDisplay() {
+            const historyList = document.getElementById('history-list');
+            
+            if (gameState.history.length === 0) {
+                historyList.innerHTML = `
+                    <div style="text-align: center; color: var(--text-secondary); padding: 2rem; font-style: italic;">
+                        <span data-translate="no_history">${translate('no_history')}</span>
+                    </div>
+                `;
+                return;
+            }
+            
+            historyList.innerHTML = gameState.history.map(item => {
+                // Asegurar que timestamp es un objeto Date válido
+                let timestamp = item.timestamp;
+                if (!(timestamp instanceof Date)) {
+                    timestamp = new Date(timestamp);
+                }
+                
+                // Verificar que la fecha es válida
+                const timeString = timestamp && !isNaN(timestamp.getTime()) 
+                    ? timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                    : 'Ahora';
+                    
+                const resultIcon = item.result === 'heads' ? '🟡' : '⚪';
+                const resultText = translate(item.result);
+                
+                return `
+                    <div class="history-item">
+                        <div class="history-result ${item.result}">
+                            ${resultIcon} ${resultText}
+                        </div>
+                        <div class="history-time">${timeString}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Sistema de sonido
+        function playSound(result) {
+            if (!gameState.soundEnabled) return;
+            
+            try {
+                // Crear sonido usando Web Audio API
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                // Frecuencias diferentes para cara y cruz
+                const frequency = result === 'heads' ? 800 : 600;
+                oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+                oscillator.type = 'sine';
+                
+                // Envelope
+                gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.01);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.3);
+                
+            } catch (e) {
+                // Fallback silencioso si Web Audio no está disponible
+                console.log('Audio not available');
+            }
+        }
+
+        // Vibración háptica
+        function vibrate() {
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+        }
+
+        // Compartir resultado mejorado
+        function shareResult() {
+            const lastResult = gameState.history[0];
+            if (!lastResult) {
+                showToast('No hay resultados para compartir');
+                return;
+            }
+            
+            const resultText = translate(lastResult.result);
+            let shareText = translate('share_text')
+                .replace('{result}', resultText)
+                .replace('{total}', gameState.total)
+                .replace('{heads}', gameState.heads)
+                .replace('{tails}', gameState.tails);
+            
+            // Crear URL solo si es posible, sino usar texto simple
+            let shareUrl = '';
+            try {
+                if (window.location.protocol !== 'about:' && window.location.hostname !== 'claudeusercontent.com') {
+                    shareUrl = window.location.origin + window.location.pathname;
+                    if (gameState.seedMode && gameState.seed) {
+                        shareUrl += `?seed=${gameState.seed}`;
+                    }
+                } else {
+                    // En entorno sandbox, incluir info de semilla en el texto
+                    if (gameState.seedMode && gameState.seed) {
+                        shareText += ` | Semilla: ${gameState.seed}`;
+                    }
+                }
+            } catch (e) {
+                console.log('URL generation not available in this environment');
+            }
+            
+            const fullShareText = shareUrl ? `${shareText}\n${shareUrl}` : shareText;
+            
+            // Intentar usar la API nativa de compartir
+            if (navigator.share && shareUrl) {
+                navigator.share({
+                    title: 'Coin Flip Result',
+                    text: shareText,
+                    url: shareUrl
+                }).catch(() => {
+                    // Fallback a clipboard
+                    copyToClipboard(fullShareText);
+                });
+            } else {
+                copyToClipboard(fullShareText);
+            }
+        }
+
+        // Copiar al portapapeles
+        function copyToClipboard(text) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast(translate('copied'));
+                }).catch(() => {
+                    fallbackCopyTextToClipboard(text);
+                });
+            } else {
+                fallbackCopyTextToClipboard(text);
+            }
+        }
+
+        function fallbackCopyTextToClipboard(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.position = "fixed";
+            
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                showToast(translate('copied'));
+            } catch (err) {
+                showToast('Error al copiar al portapapeles');
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        // Reiniciar estadísticas
+        function resetStats() {
+            if (confirm(translate('confirm_reset'))) {
+                gameState.total = 0;
+                gameState.heads = 0;
+                gameState.tails = 0;
+                gameState.currentStreak = 0;
+                gameState.maxStreak = 0;
+                gameState.currentStreakType = null;
+                gameState.history = [];
+                
+                // Reiniciar display
+                document.getElementById('result').textContent = translate('click_to_flip');
+                document.getElementById('result').className = 'result';
+                
+                const coin = document.getElementById('coin');
+                coin.classList.remove('heads', 'tails');
+                
+                // Mostrar cara por defecto
+                const headsElement = coin.querySelector('.coin-heads');
+                const tailsElement = coin.querySelector('.coin-tails');
+                headsElement.style.display = 'flex';
+                tailsElement.style.display = 'none';
+                
+                updateDisplay();
+                saveState();
+                showToast('Estadísticas reiniciadas');
+            }
+        }
+
+        // Sistema de semillas
+        function toggleSeed() {
+            gameState.seedMode = !gameState.seedMode;
+            toggleSeedUI(gameState.seedMode);
+            
+            if (gameState.seedMode) {
+                const seedValue = document.getElementById('seed-input').value || Date.now().toString();
+                updateSeed(seedValue);
+                showSeedIndicator();
+            } else {
+                gameState.seed = null;
+                gameState.rng = null;
+                hideSeedIndicator();
+                // Limpiar URL solo si es posible
+                try {
+                    if (window.location.protocol !== 'about:' && window.location.hostname !== 'claudeusercontent.com') {
+                        const url = new URL(window.location);
+                        url.searchParams.delete('seed');
+                        window.history.replaceState({}, '', url);
+                    }
+                } catch (e) {
+                    // Silenciar errores en entornos sandbox
+                    console.log('URL cleanup not available in this environment');
+                }
+            }
+            
+            saveState();
+        }
+
+        function toggleSeedUI(enabled) {
+            const toggle = document.getElementById('seed-toggle');
+            const inputContainer = document.getElementById('seed-input-container');
+            
+            toggle.classList.toggle('active', enabled);
+            toggle.setAttribute('aria-checked', enabled);
+            inputContainer.style.display = enabled ? 'block' : 'none';
+        }
+
+        function updateSeed(value) {
+            if (!value) return;
+            
+            gameState.seed = value;
+            // Convertir semilla a número para el RNG
+            let hash = 0;
+            for (let i = 0; i < value.length; i++) {
+                const char = value.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash; // Convertir a 32-bit integer
+            }
+            gameState.rng = Math.abs(hash) || 1;
+            
+            // Actualizar URL solo si estamos en un entorno apropiado
+            try {
+                if (window.location.protocol !== 'about:' && window.location.hostname !== 'claudeusercontent.com') {
+                    const url = new URL(window.location);
+                    url.searchParams.set('seed', value);
+                    window.history.replaceState({}, '', url);
+                }
+            } catch (e) {
+                // Silenciar errores en entornos sandbox
+                console.log('URL update not available in this environment');
+            }
+            
+            document.getElementById('seed-input').value = value;
+            
+            if (gameState.seedMode) {
+                showSeedIndicator();
+            }
+        }
+
+        // Sistema de temas
+        function toggleTheme() {
+            const newTheme = gameState.theme === 'light' ? 'dark' : 'light';
+            setTheme(newTheme);
+        }
+
+        function setTheme(theme) {
+            gameState.theme = theme;
+            document.documentElement.setAttribute('data-theme', theme);
+            document.getElementById('theme-icon').textContent = theme === 'light' ? '🌙' : '☀️';
+            localStorage.setItem('coin-flip-theme', theme);
+        }
+
+        // Sistema de idiomas
+        function changeLanguage(lang) {
+            gameState.language = lang;
+            document.getElementById('language-select').value = lang;
+            document.documentElement.setAttribute('lang', lang);
+            localStorage.setItem('coin-flip-language', lang);
+            updateTranslations();
+            updateDisplay();
+        }
+
+        function translate(key) {
+            return translations[gameState.language][key] || key;
+        }
+
+        function updateTranslations() {
+            document.querySelectorAll('[data-translate]').forEach(element => {
+                const key = element.getAttribute('data-translate');
+                const translation = translate(key);
+                
+                if (element.tagName === 'INPUT') {
+                    element.placeholder = translation;
+                } else {
+                    element.textContent = translation;
+                }
+            });
+            
+            // Actualizar título de la página
+            document.title = `${translate('title')} - ${translate('click_to_flip')}`;
+        }
+
+        // Alternar sonido
+        function toggleSound() {
+            gameState.soundEnabled = !gameState.soundEnabled;
+            document.getElementById('sound-icon').textContent = gameState.soundEnabled ? '🔊' : '🔇';
+            saveState();
+        }
+
+        // Confeti mejorado
+        function createConfetti() {
+            const coinContainer = document.querySelector('.coin-container');
+            const colors = ['#6366f1', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316'];
+            
+            for (let i = 0; i < 25; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = (Math.random() * 100) + '%';
+                confetti.style.top = (Math.random() * 100) + '%';
+                confetti.style.animationDelay = (Math.random() * 0.5) + 's';
+                confetti.style.animationDuration = (Math.random() * 0.8 + 1) + 's';
+                
+                // Formas aleatorias
+                if (Math.random() > 0.5) {
+                    confetti.style.borderRadius = '50%';
+                }
+                
+                coinContainer.appendChild(confetti);
+                
+                setTimeout(() => {
+                    if (confetti.parentNode) {
+                        confetti.parentNode.removeChild(confetti);
+                    }
+                }, 2000);
+            }
+        }
+
+        // Efecto de racha
+        function addStreakEffect() {
+            const coinArea = document.querySelector('.coin-area');
+            const existing = coinArea.querySelector('.streak-effect');
+            
+            if (existing) {
+                existing.remove();
+            }
+            
+            const streakEffect = document.createElement('div');
+            streakEffect.className = 'streak-effect';
+            coinArea.appendChild(streakEffect);
+            
+            setTimeout(() => {
+                if (streakEffect.parentNode) {
+                    streakEffect.parentNode.removeChild(streakEffect);
+                }
+            }, 4000);
+        }
+
+        // Indicador de modo semilla
+        function showSeedIndicator() {
+            const existing = document.querySelector('.seed-indicator');
+            if (existing) return;
+            
+            const indicator = document.createElement('div');
+            indicator.className = 'seed-indicator';
+            indicator.textContent = `🌱 Seed: ${gameState.seed}`;
+            document.body.appendChild(indicator);
+        }
+
+        function hideSeedIndicator() {
+            const indicator = document.querySelector('.seed-indicator');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+
+        // Toast notifications
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Persistencia
+        function saveState() {
+            try {
+                const stateToSave = {
+                    total: gameState.total,
+                    heads: gameState.heads,
+                    tails: gameState.tails,
+                    currentStreak: gameState.currentStreak,
+                    maxStreak: gameState.maxStreak,
+                    currentStreakType: gameState.currentStreakType,
+                    history: gameState.history.map(item => ({
+                        ...item,
+                        timestamp: item.timestamp instanceof Date ? item.timestamp.toISOString() : item.timestamp
+                    })),
+                    seedMode: gameState.seedMode,
+                    seed: gameState.seed,
+                    soundEnabled: gameState.soundEnabled,
+                    theme: gameState.theme,
+                    language: gameState.language
+                };
+                
+                localStorage.setItem('coin-flip-state', JSON.stringify(stateToSave));
+            } catch (e) {
+                console.error('Error saving state:', e);
+            }
+        }
+
+        function loadState() {
+            try {
+                const saved = localStorage.getItem('coin-flip-state');
+                if (saved) {
+                    const parsedState = JSON.parse(saved);
+                    
+                    // Validar y asignar estado
+                    gameState.total = parsedState.total || 0;
+                    gameState.heads = parsedState.heads || 0;
+                    gameState.tails = parsedState.tails || 0;
+                    gameState.currentStreak = parsedState.currentStreak || 0;
+                    gameState.maxStreak = parsedState.maxStreak || 0;
+                    gameState.currentStreakType = parsedState.currentStreakType;
+                    gameState.seedMode = parsedState.seedMode || false;
+                    gameState.seed = parsedState.seed;
+                    gameState.soundEnabled = parsedState.soundEnabled !== false; // default true
+                    gameState.theme = parsedState.theme || 'light';
+                    gameState.language = parsedState.language || 'es';
+                    
+                    // Convertir timestamps del historial de forma segura
+                    gameState.history = (parsedState.history || []).map(item => {
+                        try {
+                            return {
+                                ...item,
+                                timestamp: new Date(item.timestamp)
+                            };
+                        } catch (e) {
+                            return {
+                                ...item,
+                                timestamp: new Date() // Fallback a fecha actual
+                            };
+                        }
+                    }).filter(item => !isNaN(item.timestamp.getTime())); // Filtrar fechas inválidas
+                    
+                    // Restaurar UI
+                    setTheme(gameState.theme);
+                    changeLanguage(gameState.language);
+                    toggleSeedUI(gameState.seedMode);
+                    document.getElementById('sound-icon').textContent = gameState.soundEnabled ? '🔊' : '🔇';
+                    
+                    if (gameState.seedMode && gameState.seed) {
+                        updateSeed(gameState.seed);
+                        showSeedIndicator();
+                    }
+                    
+                    // Aplicar animaciones de entrada
+                    setTimeout(() => {
+                        document.querySelectorAll('.card, .coin-area').forEach((el, index) => {
+                            el.style.animationDelay = (index * 0.1) + 's';
+                            el.classList.add('fade-in');
+                        });
+                    }, 100);
+                }
+            } catch (e) {
+                console.error('Error loading saved state:', e);
+                // En caso de error, inicializar con estado limpio
+                gameState.history = [];
+            }
+        }
+
+        // Registro de Service Worker (deshabilitado en sandbox)
+        if ('serviceWorker' in navigator && window.location.protocol !== 'about:') {
+            window.addEventListener('load', () => {
+                try {
+                    // Solo registrar SW en entornos apropiados
+                    if (window.location.hostname !== 'claudeusercontent.com') {
+                        // Service worker básico inline más robusto
+                        const swCode = `
+                            const CACHE_NAME = 'coin-flip-v1';
+                            const urlsToCache = ['/'];
+                            
+                            self.addEventListener('install', event => {
+                                console.log('SW installing');
+                                event.waitUntil(
+                                    caches.open(CACHE_NAME)
+                                        .then(cache => {
+                                            console.log('Opened cache');
+                                            return cache.addAll(urlsToCache);
+                                        })
+                                        .catch(err => console.log('Cache failed:', err))
+                                );
+                            });
+                            
+                            self.addEventListener('fetch', event => {
+                                event.respondWith(
+                                    caches.match(event.request)
+                                        .then(response => {
+                                            if (response) {
+                                                return response;
+                                            }
+                                            return fetch(event.request);
+                                        })
+                                        .catch(err => {
+                                            console.log('Fetch failed:', err);
+                                            return new Response('Offline', { status: 503 });
+                                        })
+                                );
+                            });
+                        `;
+                        
+                        const blob = new Blob([swCode], { type: 'application/javascript' });
+                        const swUrl = URL.createObjectURL(blob);
+                        
+                        navigator.serviceWorker.register(swUrl)
+                            .then(registration => {
+                                console.log('SW registered successfully:', registration.scope);
+                            })
+                            .catch(error => {
+                                console.log('SW registration failed:', error);
+                            });
+                    } else {
+                        console.log('Service Worker disabled in sandbox environment');
+                    }
+                } catch (error) {
+                    console.log('SW setup failed:', error);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
